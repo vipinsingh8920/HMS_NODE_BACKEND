@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum HospitalStatus {
+  ACTIVE
+  DISABLED
+}
+
+model SuperAdmin {
+  id           Int       @id @default(autoincrement())
+  name         String    @db.VarChar(100)
+  email        String    @unique @db.VarChar(255)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  lastLoginAt  DateTime? @map("last_login_at") @db.Timestamptz(6)
+
+  passwordResets SuperAdminPasswordReset[]
+
+  @@index([isActive])
+  @@map("super_admins")
+}
+
+model SuperAdminPasswordReset {
+  id           Int       @id @default(autoincrement())
+  superAdminId Int       @map("super_admin_id")
+  tokenHash    String    @unique @map("token_hash") @db.Char(64)
+  expiresAt    DateTime  @map("expires_at") @db.Timestamptz(6)
+  usedAt       DateTime? @map("used_at") @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  superAdmin SuperAdmin @relation(fields: [superAdminId], references: [id], onDelete: Cascade)
+
+  @@index([superAdminId])
+  @@index([expiresAt])
+  @@map("super_admin_password_resets")
+}
+
+model Hospital {
+  id            Int            @id @default(autoincrement())
+  name          String         @db.VarChar(200)
+  code          String         @unique @db.VarChar(50)
+  email         String         @unique @db.VarChar(255)
+  phone         String         @db.VarChar(20)
+  address       String         @db.VarChar(500)
+  city          String         @db.VarChar(100)
+  state         String         @db.VarChar(100)
+  country       String         @db.VarChar(100)
+  licenseNumber String         @map("license_number") @db.VarChar(100)
+  status        HospitalStatus @default(ACTIVE)
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  disabledAt    DateTime?      @map("disabled_at") @db.Timestamptz(6)
+
+  @@index([status])
+  @@index([city])
+  @@index([state])
+  @@map("hospitals")
+}

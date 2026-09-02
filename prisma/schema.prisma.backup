@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model alembic_version {
+  version_num String @id(map: "alembic_version_pkc") @db.VarChar(32)
+}
+
+model hospital_staff {
+  id             Int       @id @default(autoincrement())
+  hospital_id    Int
+  name           String    @db.VarChar(150)
+  email          String    @db.VarChar(255)
+  phone          String    @db.VarChar(20)
+  password_hash  String    @db.VarChar(255)
+  role           String    @db.VarChar(50)
+  specialization String?   @db.VarChar(150)
+  is_active      Boolean   @default(true)
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime  @default(now()) @db.Timestamptz(6)
+  last_login_at  DateTime? @db.Timestamptz(6)
+  hospitals      hospitals @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([email], map: "ix_hospital_staff_email")
+  @@index([hospital_id], map: "ix_hospital_staff_hospital_id")
+  @@index([id], map: "ix_hospital_staff_id")
+  @@index([role], map: "ix_hospital_staff_role")
+}
+
+model hospitals {
+  id             Int              @id @default(autoincrement())
+  name           String           @db.VarChar(200)
+  code           String           @unique(map: "uq_hospitals_code") @db.VarChar(50)
+  email          String           @unique(map: "uq_hospitals_email") @db.VarChar(255)
+  phone          String           @db.VarChar(20)
+  password_hash  String           @db.VarChar(255)
+  address        String           @db.VarChar(500)
+  city           String           @db.VarChar(100)
+  state          String           @db.VarChar(100)
+  country        String           @db.VarChar(100)
+  license_number String           @db.VarChar(100)
+  is_active      Boolean          @default(true)
+  created_at     DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime         @default(now()) @db.Timestamptz(6)
+  last_login_at  DateTime?        @db.Timestamptz(6)
+  hospital_staff hospital_staff[]
+  patients       patients[]
+}
+
+model patients {
+  id             Int       @id @default(autoincrement())
+  hospital_id    Int
+  patient_number String    @unique(map: "ix_patients_patient_number") @db.VarChar(50)
+  first_name     String    @db.VarChar(100)
+  last_name      String    @db.VarChar(100)
+  email          String?   @db.VarChar(255)
+  phone          String    @db.VarChar(20)
+  date_of_birth  DateTime? @db.Date
+  gender         String?   @db.VarChar(20)
+  address        String?   @db.VarChar(500)
+  city           String?   @db.VarChar(100)
+  state          String?   @db.VarChar(100)
+  country        String?   @db.VarChar(100)
+  notes          String?   @db.VarChar(1000)
+  is_active      Boolean
+  created_at     DateTime  @db.Timestamptz(6)
+  updated_at     DateTime  @db.Timestamptz(6)
+  hospitals      hospitals @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([email], map: "ix_patients_email")
+  @@index([hospital_id], map: "ix_patients_hospital_id")
+  @@index([id], map: "ix_patients_id")
+}
+
+model super_admins {
+  id            Int       @id(map: "master_admins_pkey") @default(autoincrement())
+  name          String    @db.VarChar(100)
+  email         String    @unique(map: "uq_super_admins_email") @db.VarChar(255)
+  password_hash String    @db.VarChar(255)
+  is_active     Boolean
+  created_at    DateTime  @db.Timestamptz(6)
+  updated_at    DateTime  @db.Timestamptz(6)
+  last_login_at DateTime? @db.Timestamptz(6)
+}
